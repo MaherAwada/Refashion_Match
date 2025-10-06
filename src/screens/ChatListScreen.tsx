@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { SafeAreaView, View, Text, StyleSheet, Image, Pressable, FlatList, ImageSourcePropType } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { SafeAreaView, View, Text, StyleSheet, Image, Pressable, FlatList, Platform, UIManager, LayoutAnimation } from 'react-native';
 import MenuSheet from '../ui/MenuSheet';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -26,12 +26,29 @@ const CHATS = [
   },
 ];
 
+// Habilita LayoutAnimation no Android
+if (
+  Platform.OS === 'android' &&
+  UIManager.setLayoutAnimationEnabledExperimental
+) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
+
 export default function ChatListScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [chatsData, setChatsData] = useState<typeof CHATS>([]);
+
+  useEffect(() => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setChatsData(CHATS);
+  }, []);
 
   const renderChatItem = ({ item }: { item: typeof CHATS[0] }) => (
-    <Pressable style={styles.chatItem} onPress={() => navigation.navigate('Chat', { name: item.name, avatar: item.avatar })}>
+    <Pressable
+      style={({ pressed }) => [styles.chatItem, { opacity: pressed ? 0.7 : 1 }]}
+      onPress={() => navigation.navigate('Chat', { name: item.name, avatar: item.avatar })}
+    >
       <Image source={item.avatar} style={styles.avatar} />
       <View style={styles.chatInfo}>
         <Text style={styles.chatName}>{item.name}</Text>
@@ -55,7 +72,7 @@ export default function ChatListScreen() {
 
         {/* LISTA DE CONVERSAS */}
         <FlatList
-          data={CHATS}
+          data={chatsData}
           keyExtractor={(item) => item.id}
           renderItem={renderChatItem}
           ItemSeparatorComponent={() => <View style={styles.separator} />}

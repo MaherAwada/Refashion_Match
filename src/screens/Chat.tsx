@@ -10,6 +10,8 @@ import {
   TextInput,
   KeyboardAvoidingView,
   Platform,
+  UIManager,
+  LayoutAnimation,
 } from 'react-native';
 import MenuSheet from '../ui/MenuSheet';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -24,6 +26,14 @@ type Message = {
 };
 
 const IMG_MENU = require('../assets/menu.png');
+
+// Habilita LayoutAnimation no Android
+if (
+  Platform.OS === 'android' &&
+  UIManager.setLayoutAnimationEnabledExperimental
+) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
 
 export default function ChatScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -48,6 +58,9 @@ export default function ChatScreen() {
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     };
 
+    // Configura a próxima mudança de layout para ser animada
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+
     setMessages(prev => [newMessage, ...prev]);
     setInputText('');
   };
@@ -57,7 +70,10 @@ export default function ChatScreen() {
       {/* HEADER */}
       <View style={styles.header}>
         <View style={styles.headerLeft}>
-          <Pressable onPress={() => navigation.goBack()} style={styles.backButton}>
+          <Pressable
+            onPress={() => navigation.goBack()}
+            style={({ pressed }) => [styles.backButton, { opacity: pressed ? 0.5 : 1 }]}
+          >
             <Text style={styles.backButtonText}>{'<'}</Text>
           </Pressable>
           <Image source={avatar} style={styles.perfilImage} />
